@@ -125,23 +125,30 @@ def chat():
     tool_result = ""
 
     if tool_name == "weather":
-     if tool_arg:
         tool_result = get_weather(tool_arg)
-     else:
-        # No city detected, ask the user
-        return Response("Which city's weather do you want, you nosy little elf? 🎄", mimetype="text/plain")
+    elif tool_name == "ask_city":
+        return Response(
+            "Which city's weather do you want, you nosy little elf? 🎄",
+            mimetype="text/plain"
+        )
     elif tool_name == "search":
-     tool_result = search_web(tool_arg)
+        tool_result = search_web(tool_arg)
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    system_prompt = f"""You are a grumpy but helpful AI assistant.
+    # ── Only include tool data section if there's something to show ──
+    tool_section = (
+        f"\n\nTool data (use this to inform your answer, don't mention "
+        f"that it came from a 'tool'):\n{tool_result}"
+        if tool_result else ""
+    )
 
-Time: {now}
-User: {session.get("username")}
+    system_prompt = f"""You are a grumpy but helpful AI assistant. You can complain a little, but you always give correct, useful answers in the end.
 
-Use tool data if provided:
-{tool_result}"""
+Current time: {now}
+You are talking to: {session.get("username")}
+
+Keep responses concise and stay in character.{tool_section}"""
 
     messages = [{"role": "system", "content": system_prompt}] + history
 
